@@ -1,10 +1,10 @@
 {
-  "name": "vue-i18n-auto-translate",
+  "name": "eps-i18n",
   "version": "1.0.0",
   "description": "vueautoi18n",
   "main": "./loaders/index.js",
   "bin": {
-    "vue-i18n-auto-translate": "./cli/bin/index.js"
+    "eps-i18n": "./cli/bin/index.js"
   },
   "author": "康俊鹏",
   "license": "ISC",

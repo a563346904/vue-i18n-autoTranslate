@@ -1,8 +1,8 @@
-# vue-i18n-auto-translate
+# eps-i18n
 
 ## 安装
 ```
-npm i -D vue-i18n-auto-translate
+npm i -D eps-i18n
 ```
 
 ## 配置webpack loader 
@@ -16,7 +16,7 @@ module.exports = {
           test: /\.(js|vue)$/,
           use: [
             {
-              loader: 'vue-i18n-auto-translate'
+              loader: 'eps-i18n'
             }
           ],
           exclude: /node_modules/
@@ -26,7 +26,7 @@ module.exports = {
 }
 ```
 
-## 配置vue-i18n-auto-translate
+## 配置eps-i18n
 ```js
 module.exports = {
   language: ['zh', 'en'],                                                         // 需要国际化的语言种类
@@ -43,5 +43,5 @@ module.exports = {
 
 ### cli
 ```shell
-npx vue-i18n-auto-translate sync # 同步国际化资源文件
+npx eps-i18n sync # 同步国际化资源文件
 ```

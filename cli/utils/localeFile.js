@@ -27,7 +27,7 @@ const mkdirMultipleSync = (dirname) => {
 /**
    * 使用百度翻译将对应语言翻译
    */
-const baiduApiReplace = (configFilePath, moduleIdent, values, locale) => {
+const baiduApiReplace = (configFilePath, moduleIdent, values, locale, resolve) => {
   let objIndex = 0;
   let objList = [];
   let obj = {}
@@ -49,16 +49,13 @@ const baiduApiReplace = (configFilePath, moduleIdent, values, locale) => {
       values = Object.assign(values, res)
       console.log('...')
     }
-    fs.writeFile(configFilePath, moduleIdent + JSON.stringify(values, null, 2), err => {
-      if (err) {
-        console.log(err);
-      }
-    });
+    resolve({locale, data: values})
     log.success(`${locale}国际化文件生成成功`);
   }
 
   if(objList.length == 0) {
     log.success(`${locale}国际化文件生成成功`);
+    resolve({locale, data: {}})
     return;
   }
   execute(...objList);
@@ -74,8 +71,9 @@ module.exports = class LocaleFile {
    * @param {object} values    KV值
    * @param {string} locale    locales标识
    * @param {object} options   自动国际化配置对象
+   * @param {object} originData 远程的数据
    */
-  createConf(values, locale, options) {
+  createConf(values, locale, options, originData) {
     const folder = (
       this.localesDir.startsWith('/')
         ? this.localesDir
@@ -93,21 +91,23 @@ module.exports = class LocaleFile {
       let moduleIdent = options.modules === 'commonjs' ? 'module.exports = ' : 'export default '
       moduleIdent = localeFileExt === '.json' ? '' : moduleIdent
 
-      const { appid, secret } = options
+      const { appid, secret } = options;
+
+      let obj = {};
+      Object.keys(values).forEach(k => {
+        if(!originData[locale][k]) {
+          obj[k] = values[k]
+        }
+      });
+
       if(appid && secret && locale !== 'zh') {
         translate = new MysKeyTranslate({
           appid,
           secret
         });
-        baiduApiReplace(configFilePath, moduleIdent, values, locale)
+        baiduApiReplace(configFilePath, moduleIdent, obj, locale, resolve)
       } else {
-        fs.writeFile(configFilePath, moduleIdent + JSON.stringify(values, null, 2), err => {
-          if (err) {
-            reject(err);
-          } else {
-            resolve(configFilePath);
-          }
-        });
+        resolve({locale, data: obj})
       }
     });
     
