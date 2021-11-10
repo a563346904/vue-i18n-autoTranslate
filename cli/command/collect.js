@@ -79,7 +79,7 @@ module.exports = async function (programOption = {}) {
       res.forEach(obj => {
         Object.keys(obj.data).forEach(key => {
           str += sqlStart + '\n'
-          str += `values (EPS_SYS_INTERNATION_SEQ.NEXTVAL, '${options.moduleName}','${key}', '${obj.data[key]}', null, '${lanauageMap[obj.locale]}', '请求IPtxt_requestip', sysdate, '0', 'import',null, null, null, '0', '0', null); \n`;
+          str += `values (EPS_SYS_INTERNATION_SEQ.NEXTVAL, '${options.moduleName}','${key}', '${obj.data[key]}', null, '${lanauageMap[obj.locale]}', '${res[0].data[key] + res[1].data[key]}', sysdate, '0', 'import',null, null, null, '0', '0', null); \n`;
           str += sqlEnd + '\n'
         })
       })
@@ -97,7 +97,5 @@ module.exports = async function (programOption = {}) {
     
     
     log.success('生成国际化配置收集完成')
-  }).catch(err => {
-    console.log('国际化错误')
   })
 }

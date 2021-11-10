@@ -47,8 +47,17 @@ const baiduApiReplace = (configFilePath, moduleIdent, values, locale, resolve) =
     for (let item of args) {
       let res = await translate(item, { from: "zh", to: locale })
       values = Object.assign(values, res)
-      console.log('...')
     }
+    Object.keys(values).forEach(key => {
+      if(values[key].includes("'")) {
+        try {
+          values[key] = values[key].replace(/\'/g, "''")
+        } catch (error) {
+          values[key] = values[key]
+          console.log(values[key])
+        }
+      }
+    })
     resolve({locale, data: values})
     log.success(`${locale}国际化文件生成成功`);
   }
