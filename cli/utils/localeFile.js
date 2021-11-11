@@ -28,45 +28,50 @@ const mkdirMultipleSync = (dirname) => {
    * 使用百度翻译将对应语言翻译
    */
 const baiduApiReplace = (configFilePath, moduleIdent, values, locale) => {
-  let objIndex = 0;
-  let objList = [];
-  let obj = {}
-  Object.keys(values).forEach(key => {
-    if (/[\u4e00-\u9fa5]+/g.test(values[key])) {
-      obj[key] = values[key];
-      objList[objIndex] = JSON.parse(JSON.stringify(obj));
-      if(Object.keys(obj).length > 30) {
-        obj = {};
-        objIndex++;
-      }      
-    }
-  })
-
-  async function execute() {
-    const args = [].slice.call(arguments, 0)
-    for (let item of args) {
-      let res = await translate(item, { from: "zh", to: locale })
-      values = Object.assign(values, res)
-      console.log('...')
-    }
-    fs.writeFile(configFilePath, moduleIdent + JSON.stringify(values, null, 2), err => {
-      if (err) {
-        console.log(err);
+  return new Promise(resolve => {
+    let objIndex = 0;
+    let objList = [];
+    let obj = {}
+    Object.keys(values).forEach(key => {
+      if (/[\u4e00-\u9fa5]+/g.test(values[key])) {
+        obj[key] = values[key];
+        objList[objIndex] = JSON.parse(JSON.stringify(obj));
+        if(Object.keys(obj).length > 30) {
+          obj = {};
+          objIndex++;
+        }      
       }
-    });
-    log.success(`${locale}国际化文件生成成功`);
-  }
+    })
 
-  if(objList.length == 0) {
-    log.success(`${locale}国际化文件生成成功`);
-    return;
-  }
-  execute(...objList);
+    async function execute() {
+      const args = [].slice.call(arguments, 0)
+      for (let item of args) {
+        let res = await translate(item, { from: "zh", to: locale })
+        values = Object.assign(values, res)
+        console.log('翻译中...')
+      }
+      fs.writeFile(configFilePath, moduleIdent + JSON.stringify(values, null, 2), err => {
+        if (err) {
+          console.log(err);
+          reject();
+        }
+      });
+      resolve()
+      log.success(`${locale}国际化文件生成成功`);  
+    }
+
+    if(objList.length == 0) {
+      log.success(`${locale}国际化文件生成成功`);
+      resolve()
+      return;
+    }
+    execute(...objList);
+  })
 }
 
 module.exports = class LocaleFile {
   constructor(folder) {
-    this.localesDir = folder
+    this.localesDir = folder;
   }
 
   /**
@@ -76,35 +81,39 @@ module.exports = class LocaleFile {
    * @param {object} options   自动国际化配置对象
    */
   createConf(values, locale, options) {
-    const folder = (
-      this.localesDir.startsWith('/')
-        ? this.localesDir
-        : path.join(cwdPath, this.localesDir)
-    );
-    try {
-      fs.accessSync(folder)
-    } catch (e) {
-      mkdirMultipleSync(folder)
-    }
-    const localeFileExt = options.localeFileExt || '.json'
-    const configFilePath = path.join(folder, `${locale}${localeFileExt}`);
-
     return new Promise((resolve, reject) => {
+      const folder = (
+        this.localesDir.startsWith('/')
+          ? this.localesDir
+          : path.join(cwdPath, this.localesDir)
+      );
+      try {
+        fs.accessSync(folder)
+      } catch (e) {
+        mkdirMultipleSync(folder)
+      }
+      const localeFileExt = options.localeFileExt || '.json'
+      const configFilePath = path.join(folder, `${locale}${localeFileExt}`);
+
+    
       let moduleIdent = options.modules === 'commonjs' ? 'module.exports = ' : 'export default '
       moduleIdent = localeFileExt === '.json' ? '' : moduleIdent
-
+      
       const { appid, secret } = options
       if(appid && secret && locale !== 'zh') {
         translate = new MysKeyTranslate({
           appid,
           secret
         });
-        baiduApiReplace(configFilePath, moduleIdent, values, locale)
+        baiduApiReplace(configFilePath, moduleIdent, values, locale).then(_ => {
+          resolve(configFilePath)
+        })
       } else {
         fs.writeFile(configFilePath, moduleIdent + JSON.stringify(values, null, 2), err => {
           if (err) {
             reject(err);
           } else {
+            log.success(`${locale}国际化文件生成成功`);  
             resolve(configFilePath);
           }
         });

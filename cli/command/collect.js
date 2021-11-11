@@ -46,11 +46,11 @@ module.exports = async function (programOption = {}) {
   // 创建生成国际化文件对象
   const localeFile = new LocaleFile(options.localePath)
   // 生成配置文件
-  createTasks = options.language.map(locale => {
+  for (let locale of options.language) {
     let data = localeFile.getConf(locale, options)
     data = baseUtils.mergeMessages(data, messages)
-    return localeFile.createConf(data, locale, options)
-  })
+    await localeFile.createConf(data, locale, options)
+  }
   log.success('生成国际化配置收集完成')
 
 }
